@@ -1,24 +1,33 @@
-# Introduction
+# Performance testing with Iter8, ft. custom metrics!
 
-[Iter8](https://iter8.tools/0.10/) is a open source metrics-driven release optimizer for apps and ML-models deployed with Kubernetes. It can perform SLO validation and A/B(/n) tests on different versions of your apps and ML-models to determine which is the best version, ensuring that they perform as expected and maximize business value.
 
-Iter8 uses metrics to perform these experiments and decide on a winner. Iter8 has built-in metrics, such as **latency** and **error-related** metrics for [HTTP](https://iter8.tools/0.10/tutorials/load-test-http/basicusage/#specify-metrics-and-slos) and [gRPC services](https://iter8.tools/0.10/tutorials/load-test-grpc/basicusage/#specify-metrics-and-slos) that you can use out of the box, but it can also utilize **custom metrics**. Custom metrics allow the user to utilize metrics from any database that can be queried using HTTP.
+![iter8](images/iter8.png)
 
-In this tutorial, we will show you how custom metrics are defined, using Istio as an example.
+**SLO validation** and **A/B(/n) testing** are key to ensuring your services **perform as intended** and **maximize business value**. With [Iter8](https://iter8.tools/0.10/), you can get started with SLO validation and A/B/(/n) testing in seconds. 
 
-# Custom metrics file
+[Iter8](https://iter8.tools/0.10/) is an open source metrics-driven release optimizer for apps and ML-models deployed with Kubernetes. You can use Iter8 to conduct various kinds of **experiments** that do a **variety of tasks** such as collecting metrics from different versions of your service, validating those metrics against SLOs, determining which is the best performing version, and much more.
 
-### Background
+For simple [HTTP](https://iter8.tools/0.10/tutorials/load-test-http/basicusage/#specify-metrics-and-slos) and [gRPC](https://iter8.tools/0.10/tutorials/load-test-grpc/basicusage/#specify-metrics-and-slos) services, you can use Iter8's built-in metrics, which will automatically generate load and collect **latency** and **error-related** metrics. However, if you want to use metrics from external sources, you can define **custom metrics**, which tells Iter8 how to query for metrics from those sources. 
 
-Istio is a service mesh that works on top of Kubernetes. While your application or ML model is running, Istio will collect performance metrics and store them in a Prometheus database. By using custom metrics, we can show Iter8 how to query for these metrics from Prometheus and use them for our experiments.
+For example, if your service is using Istio, then Istio is also collecting performance metrics for your service and storing them in a Prometheus database, and if you would like to use those metrics in your Iter8 experiments, then you can use custom metrics to do so. 
 
-A custom metrics file describes how to query a database via HTTP and contains a set of queries for each metric. In addition, it contains a set of jq expressions for extracting the metric value from the JSON response from each respective query.
+Other service meshes like OpenShift and Linkerd also store performance metrics in Prometheus, which can all be utilized by Iter8 with custom metrics. However, Iter8 and custom metrics are not limited to just service meshes and Prometheus databases. For example, Knative, a tool for building serverless applications, and KServe and Seldon, tools for ML applications, all provide their own ways for collecting metrics and Iter8 can utilize all of these via custom metrics. 
 
-You can create your own custom metrics file for your own use case in order to use them with Iter8.
+*Custom metrics is a **general solution** that allows Iter8 to work with any service mesh, application resource, and any database which serves metrics*.
 
-### Content
+In this tutorial, we will show you how custom metrics are defined, using Istio and Prometheus as an example. Iter8 does provide custom metrics for some tools but knowing how to define custom metrics can allow you to use Iter8 to its maximum potential. 
 
-We will now describe what is in the [Istio custom metrics file](https://github.com/iter8-tools/iter8/blob/master/custommetrics/istio-prom.tpl).
+# All about custom metrics files
+
+### Some background
+
+As mentioned previously, Istio is a service mesh that works on top of Kubernetes. While your services are running, Istio will collect performance metrics and store them in a Prometheus database. By using custom metrics, we can show Iter8 how to query for these metrics from Prometheus and use them for our experiments.
+
+A custom metrics file describes how to query your metrics provider via HTTP and contains a set of queries for each metric. In addition to the set of queries, it also contains a set of jq expressions for extracting the metric value from the JSON response from each respective query.
+
+### What's in a metrics file?
+
+We will now describe what is in the [Istio custom metrics template](https://github.com/iter8-tools/iter8/blob/master/custommetrics/istio-prom.tpl) that Iter8 provides.
 
 Here is an excerpt:
 
@@ -40,21 +49,21 @@ metrics:
   jqExpression: .data.result[0].value[1] | tonumber
 ```
 
-`url` is HTTP endpoint of the database that we want Iter8 to send queries to. In this case, this should be the endpoint of the Prometheus service that is installed using Istio's [Prometheus add-on](https://istio.io/latest/docs/ops/integrations/prometheus/). With the default installation of the add-on, the Prometheus service will be under the `istio-system` namespace and be accessible on port `9090`. Therefore, we have also configured a default value of `http://prometheus.istio-system:9090/api/v1/query`.
+`url` is the **HTTP endpoint** of the metrics provider that we want Iter8 to send queries to. In this case, this should be Prometheus database endpoint. With the default installation of the [Prometheus add-on](https://istio.io/latest/docs/ops/integrations/prometheus/), the Prometheus service will be under the `istio-system` namespace and be accessible on port `9090`. Therefore, we have also configured a default value.
 
-`provider` is a name for the metrics **provider**, the source of the data. The provider name should match the name of the custom metrics file and is used to identify the file and generate names for some other files. For example, this custom metrics template `istio-prom.tpl` will generate a custom metrics YAML `istio-prom.yaml` when the experiment is launched.
+`provider` is a **name** for the metrics provider, the source of the data. The provider name should match the name of the custom metrics file and is used to identify the file and generate names for some other files. For example, this custom metrics template `istio-prom.tpl` will generate a custom metrics YAML `istio-prom.yaml` when the experiment is launched.
 
-`method` is the HTTP method that that should be used for the query. Prometheus allows the user to query using both `GET` and `POST` ([source](https://prometheus.io/docs/prometheus/latest/querying/api/)) so we have selected to use `GET`.
+`method` is the **HTTP method** that that should be used for the query. Prometheus allows the user to query using both `GET` and `POST` ([source](https://prometheus.io/docs/prometheus/latest/querying/api/)) so we have selected to use `GET`.
 
-`metrics` is a set of individual queries and jq expressions for each metric. In this tutorial, we will only describe one metric, `request-count` but you can add as many metrics as needed.
+`metrics` is a set of individual **queries** and **jq expressions** for each metric. In this tutorial, we will only describe one metric, `request-count` but you can add as many metrics as needed.
 
-`metrics[0].name` is the name of the metric. In this case, it is `request-count`.
+`metrics[0].name` is the **name** of the metric. In this case, it is `request-count`.
 
 `metrics[0].type` is the [type](https://prometheus.io/docs/concepts/metric_types/) of the metric. The type should either be `counter` or `gauge`.
 
-`metrics[0].description` is a description of the metric. `request-count` should be the number of requests sent to the destination service.
+`metrics[0].description` is a **description** of the metric. `request-count` should be the number of requests sent to the destination service.
 
-`metrics[0].params` is the set of HTTP parameters that should be sent with the query. Prometheus requires one query parameter, `query`, which we have defined ([source](https://prometheus.io/docs/prometheus/latest/querying/api/#expression-queries)). Prometheus can also use `time` and `timeout` query parameters but they are optional, so we did not define them.
+`metrics[0].params` is the set of **HTTP parameters** that should be sent with the query. Prometheus requires one query parameter, `query`, which we have defined ([source](https://prometheus.io/docs/prometheus/latest/querying/api/#expression-queries)). Prometheus can also use `time` and `timeout` query parameters but they are optional, so we did not define them.
 
 `metrics[0].params[0].name` is the name of the HTTP parameter, in this case `query`.
 
@@ -62,7 +71,9 @@ metrics:
 
 Finally, `metrics[0].params[0].jqExpression` is the [jq expression](https://stedolan.github.io/jq/manual/) that should be applied to the query response in order to extract the metrics value.
 
-### Usage
+### How to use a custom metrics file
+
+![Experiment with custom metrics](images/custommetrics.png)
 
 To use custom metrics in your experiment, you need to use the `custommetrics` task.
 
