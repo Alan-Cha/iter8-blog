@@ -1,4 +1,4 @@
-# Performance testing with Iter8, ft. custom metrics!
+# Performance testing with Iter8, now with custom metrics!
 
 
 ![iter8](images/iter8.png)
@@ -19,13 +19,11 @@ In this tutorial, we will show you how custom metrics are defined, using Istio a
 
 # All about custom metrics files
 
-### Some background
-
-As mentioned previously, Istio is a service mesh that works on top of Kubernetes. While your services are running, Istio will collect performance metrics and store them in a Prometheus database. By using custom metrics, we can show Iter8 how to query for these metrics from Prometheus and use them for our experiments.
+### What's in a metrics file?
 
 A custom metrics file describes how to query your metrics provider via HTTP and contains a set of queries for each metric. In addition to the set of queries, it also contains a set of jq expressions for extracting the metric value from the JSON response from each respective query.
 
-### What's in a metrics file?
+A custom metrics template is used to define the desired metrics in a Iter8 consumable fashion. It is templated so you can easily provide service-specific parameters so Iter8 can query for the correct service.
 
 We will now describe what is in the [Istio custom metrics template](https://github.com/iter8-tools/iter8/blob/master/custommetrics/istio-prom.tpl) that Iter8 provides.
 
@@ -71,11 +69,11 @@ metrics:
 
 Finally, `metrics[0].params[0].jqExpression` is the [jq expression](https://stedolan.github.io/jq/manual/) that should be applied to the query response in order to extract the metrics value.
 
-### How to use a custom metrics file
+### Using a custom metrics file
 
 ![Experiment with custom metrics](images/custommetrics.png)
 
-To use custom metrics in your experiment, you need to use the `custommetrics` task.
+To use custom metrics in your experiment, use the `custommetrics` task.
 
 Consider the following experiment.
 
@@ -83,7 +81,6 @@ Consider the following experiment.
 iter8 k launch \
 --set "tasks={custommetrics,assess}" \
 --set custommetrics.templates.istio-prom="https://raw.githubusercontent.com/iter8-tools/iter8/master/custommetrics/istio-prom.tpl" \
-kalantar marked this conversation as resolved.
 --set custommetrics.values.destinationWorkload=httpbin \
 --set custommetrics.values.destinationWorkloadNamespace=default \
 --set assess.SLOs.upper.istio-prom/error-rate=0 \
@@ -92,13 +89,13 @@ kalantar marked this conversation as resolved.
 --set cronjobSchedule="*/1 * * * *"
 ```
 
-`tasks={custommetrics,assess}` tells Iter8 to use the `custommetrics` and the `assess` tasks. The `custommetrics` task uses your custom metrics file in order to query for metrics and the `assess` task will use those metrics to evaluate your service(s).
+`tasks={custommetrics,assess}` tells Iter8 to use the `custommetrics` and the `assess` tasks. The `custommetrics` task uses your custom metrics file in order to query for metrics and the `assess` task will use those metrics to evaluate your service(s) by validating them against the specified SLOs.
 
 `custommetrics.templates.istio-prom=...` tells Iter8 where it can access the custom metrics file.
 
 `custommetrics.values....=...` these are related to the additional templating that was mentioned in the section on `metrics[0].params[0].value`. This allows a particular destination service to be selected, in this case, one with `destinationWorkload=httpbin` and `destinationWorkloadNamespace=default`.
 
-`assess.SLOs....=...` are related to the selecting SLOs to validate in the `assess` task. In this case, error rate must be 0 and mean latency must be below 100 ms.
+`assess.SLOs....=...` are related to the selecting SLOs to validate in the `assess` task. In this case, Iter8 will check that error rate and mean latency, collected from the `custommetrics` task, are 0 and below 100 ms respectively.
 
 Lastly, `runner=cronjob` tells Iter8 to use a cronjob for this experiment. This is what's known as a looping experiment, where the tasks of the experiment are run on a schedule. This is useful for experiments that should be run over a long period of time, such as with live traffic. `cronjobSchedule="*/1 * * * *"` defines how often the cronjob should run.
 
@@ -129,7 +126,6 @@ If you would like to try the previous experiment, you can do so with the followi
   --set cronjobSchedule="*/1 * * * *"
   --set "tasks={custommetrics,assess}" \
   --set custommetrics.templates.istio-prom="https://raw.githubusercontent.com/iter8-tools/iter8/master/custommetrics/istio-prom.tpl" \
-  kalantar marked this conversation as resolved.
   --set custommetrics.values.destinationWorkload=httpbin \
   --set custommetrics.values.destinationWorkloadNamespace=default \
   --set assess.SLOs.upper.istio-prom/error-rate=0 \
@@ -176,4 +172,4 @@ This is a summary of what happened during the experiment. At this point in the e
 
 ### Next steps
 
-To learn more about Iter8 and how to run SLO validation and A/B(/n) experiments with your apps and ML models, take a look at our website [iter8.tools](https://iter8.tools). We have many [tutorials](https://iter8.tools/0.10/tutorials/load-test-http/basicusage/) as well as [documentation](https://iter8.tools/0.10/user-guide/topics/values/). If you need any help, you can find us on [Slack](https://join.slack.com/t/iter8-tools/shared_invite/zt-awl2se8i-L0pZCpuHntpPejxzLicbmw) and we'll happily answer any questions you have. In addition, we also have regular community meetings, on the 3rd Wednesday of every month from 11:00 AM – 12:00 PM EST/EDT ([calendar](https://calendar.google.com/calendar/embed?src=6ck3asgicl9jfgjhkqq1bogen4%40group.calendar.google.com&ctz=America%2FNew_York)). Hope to hear from you soon!
+To learn more about Iter8 and how to run SLO validation and A/B(/n) experiments with your apps and ML models, take a look at our website [iter8.tools](https://iter8.tools). We have many [tutorials](https://iter8.tools/0.10/tutorials/load-test-http/basicusage/) as well as [documentation](https://iter8.tools/0.10/user-guide/topics/values/). If you need any help, you can find us on [Slack](https://join.slack.com/t/iter8-tools/shared_invite/zt-awl2se8i-L0pZCpuHntpPejxzLicbmw) and we'll happily answer any questions you have.
