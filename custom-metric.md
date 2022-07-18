@@ -101,7 +101,7 @@ Lastly, `runner=cronjob` tells Iter8 to use a cronjob for this experiment. This 
 
 *** 
 
-If you would like to try the previous experiment, you can do so with the following steps.
+If you would like to try the previous experiment, you can do so with the following steps. In the steps below, you will set up Istio and the Prometheus add-on, deploy a sample HTTP service, generate some load, launch the experiment, and view the results.
 
   1. Create a new Kubernetes cluster.
   2. [Install Istio](https://istio.io/latest/docs/setup/install/).
@@ -168,7 +168,7 @@ Latest observed values for metrics:
   istio/request-count              |2110.00
 ```
 
-This is a summary of what happened during the experiment. At this point in the experiment (recall that this is a looping experiment where the tasks are run on a schedule), the error rate and the mean latency are below the maximum that we have set. Note that `error-count` and `latency-mean` as well as `error-rate`, `le500ms-latency-percentile`, and `request-count` are all metrics collected from Istio using custom metrics.
+This is a summary of what happened during the experiment. As you can see, the error rate and the mean latency are below the maximums that we have set. These metrics, `error-count`, `error-rate`, `latency-mean`, `le500ms-latency-percentile`, and `request-count` have all been collected from Istio using custom metrics. Note that this is a looping experiment so the experiment will rerun the tasks at the specified `cronjobSchedule`. In this case, the experiment will loop every minute and you should see changes to some of the metrics.
 
 ### Next steps
 
