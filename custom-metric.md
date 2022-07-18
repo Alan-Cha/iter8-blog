@@ -55,19 +55,27 @@ metrics:
 
 `metrics` is a set of individual **queries** and **jq expressions** for each metric. In this tutorial, we will only describe one metric, `request-count` but you can add as many metrics as needed.
 
-`metrics[0].name` is the **name** of the metric. In this case, it is `request-count`.
+***
 
-`metrics[0].type` is the [type](https://prometheus.io/docs/concepts/metric_types/) of the metric. The type should either be `counter` or `gauge`.
+For each metric, we see the following:
 
-`metrics[0].description` is a **description** of the metric. `request-count` should be the number of requests sent to the destination service.
+`name` is the **name** of the metric. In this case, it is `request-count`.
 
-`metrics[0].params` is the set of **HTTP parameters** that should be sent with the query. Prometheus requires one query parameter, `query`, which we have defined ([source](https://prometheus.io/docs/prometheus/latest/querying/api/#expression-queries)). Prometheus can also use `time` and `timeout` query parameters but they are optional, so we did not define them.
+`type` is the [type](https://prometheus.io/docs/concepts/metric_types/) of the metric. The type should either be `counter` or `gauge`.
 
-`metrics[0].params[0].name` is the name of the HTTP parameter, in this case `query`.
+`description` is a **description** of the metric. `request-count` should be the number of requests sent to the destination service.
 
-`metrics[0].params[0].value` is the [PromQL query](https://prometheus.io/docs/prometheus/latest/querying/basics/) that should be sent for `request-count`. Note that there is additional templating here, the purpose of which is to select metrics for a particular destination service.
+`params` is the set of **HTTP parameters** that should be sent with the query. Prometheus requires one query parameter, `query`, which we have defined ([source](https://prometheus.io/docs/prometheus/latest/querying/api/#expression-queries)). Prometheus can also use `time` and `timeout` query parameters but they are optional, so we did not define them.
 
-Finally, `metrics[0].params[0].jqExpression` is the [jq expression](https://stedolan.github.io/jq/manual/) that should be applied to the query response in order to extract the metrics value.
+***
+
+And for each HTTP parameter, we see the following:
+
+`name` is the name of the HTTP parameter, in this case `query`.
+
+`value` is the [PromQL query](https://prometheus.io/docs/prometheus/latest/querying/basics/) that should be sent for `request-count`. Note that there is additional templating here, the purpose of which is to select metrics for a particular destination service.
+
+Finally, `jqExpression` is the [jq expression](https://stedolan.github.io/jq/manual/) that should be applied to the query response in order to extract the metrics value.
 
 ### Using a custom metrics file
 
