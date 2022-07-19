@@ -3,19 +3,15 @@
 
 ![iter8](images/iter8.png)
 
-**SLO validation** and **A/B(/n) testing** are key to ensuring your services **perform as intended** and **maximize business value**. With [Iter8](https://iter8.tools/0.10/), you can get started with SLO validation and A/B/(/n) testing in seconds. 
+**SLO validation** and other forms of **performance testing** are key to ensuring your services **perform as intended** and **maximize business value**. With [Iter8](https://iter8.tools/0.10/), you can get started with SLO validation and A/B/(/n) testing in seconds. 
 
 [Iter8](https://iter8.tools/0.10/) is an open source metrics-driven release optimizer for apps and ML-models deployed with Kubernetes. You can use Iter8 to conduct various kinds of **experiments** that do a **variety of tasks** such as collecting metrics from different versions of your service, validating those metrics against SLOs, determining which is the best performing version, and much more.
 
-For simple [HTTP](https://iter8.tools/0.10/tutorials/load-test-http/basicusage/#specify-metrics-and-slos) and [gRPC](https://iter8.tools/0.10/tutorials/load-test-grpc/basicusage/#specify-metrics-and-slos) services, you can use Iter8's built-in metrics, which will automatically generate load and collect **latency** and **error-related** metrics. However, if you want to use metrics from external sources, you can define **custom metrics**, which tells Iter8 how to query for metrics from those sources. 
+Iter8 has built-in metrics which means it will generate load and collect **latency** and **error-related** metrics for your [HTTP](https://iter8.tools/0.10/tutorials/load-test-http/basicusage/#specify-metrics-and-slos) and [gRPC](https://iter8.tools/0.10/tutorials/load-test-grpc/basicusage/#specify-metrics-and-slos) services. However, if you want to use other kinds of metrics from external sources, you can use Iter8's **custom metrics** feature, which essentially tells Iter8 how to query these sources and what metrics to query for. For example, if your service is using Istio, then Istio is also collecting performance metrics for your service and storing them in a Prometheus database, and if you would like to use those metrics in your Iter8 experiments, then you can use custom metrics to do so. 
 
-For example, if your service is using Istio, then Istio is also collecting performance metrics for your service and storing them in a Prometheus database, and if you would like to use those metrics in your Iter8 experiments, then you can use custom metrics to do so. 
+Custom metrics allows Iter8 to work with not only other service meshes like OpenShift and Linkerd but also Knative, a tool for building serverless applications, KServe and Seldon, tools for ML applications, and much more. *Iter8's custom metrics feature is a **general solution** that allows Iter8 to work with any service mesh, application resource, and any database which serves metrics*.
 
-Other service meshes like OpenShift and Linkerd also store performance metrics in Prometheus, which can all be utilized by Iter8 with custom metrics. However, Iter8 and custom metrics are not limited to just service meshes and Prometheus databases. For example, Knative, a tool for building serverless applications, and KServe and Seldon, tools for ML applications, all provide their own ways for collecting metrics and Iter8 can utilize all of these via custom metrics. 
-
-*Custom metrics is a **general solution** that allows Iter8 to work with any service mesh, application resource, and any database which serves metrics*.
-
-In this tutorial, we will show you how custom metrics are defined, using Istio and Prometheus as an example. Iter8 does provide custom metrics for some tools but knowing how to define custom metrics can allow you to use Iter8 to its maximum potential. 
+In this tutorial, we will show you how custom metrics are defined, using Istio and Prometheus as an example. Iter8 does provide some custom metrics templates for some tools but knowing how to define your own custom metrics can allow you to use Iter8 to its maximum potential. 
 
 # All about custom metrics files
 
@@ -31,7 +27,6 @@ Here is an excerpt:
 
 ```yaml
 url: {{ default .istioPromURL "http://prometheus.istio-system:9090/api/v1/query" }}
-provider: istio-prom
 method: GET
 metrics:
 - name: request-count
@@ -48,8 +43,6 @@ metrics:
 ```
 
 `url` is the **HTTP endpoint** of the metrics provider that we want Iter8 to send queries to. In this case, this should be Prometheus database endpoint. With the default installation of the [Prometheus add-on](https://istio.io/latest/docs/ops/integrations/prometheus/), the Prometheus service will be under the `istio-system` namespace and be accessible on port `9090`. Therefore, we have also configured a default value.
-
-`provider` is a **name** for the metrics provider, the source of the data. The provider name should match the name of the custom metrics file and is used to identify the file and generate names for some other files. For example, this custom metrics template `istio-prom.tpl` will generate a custom metrics YAML `istio-prom.yaml` when the experiment is launched.
 
 `method` is the **HTTP method** that that should be used for the query. Prometheus allows the user to query using both `GET` and `POST` ([source](https://prometheus.io/docs/prometheus/latest/querying/api/)) so we have selected to use `GET`.
 
@@ -81,7 +74,7 @@ Finally, `jqExpression` is the [jq expression](https://stedolan.github.io/jq/man
 
 ![Experiment with custom metrics](images/custommetrics.png)
 
-To use custom metrics in your experiment, use the `custommetrics` task.
+To use custom metrics in your experiment, use the [custommetrics](https://iter8.tools/0.11/user-guide/tasks/custommetrics/) task.
 
 Consider the following experiment.
 
@@ -97,7 +90,7 @@ iter8 k launch \
 --set cronjobSchedule="*/1 * * * *"
 ```
 
-`tasks={custommetrics,assess}` tells Iter8 to use the `custommetrics` and the `assess` tasks. The `custommetrics` task uses your custom metrics file in order to query for metrics and the `assess` task will use those metrics to evaluate your service(s) by validating them against the specified SLOs.
+`tasks={custommetrics,assess}` tells Iter8 to use the [custommetrics](https://iter8.tools/0.11/user-guide/tasks/custommetrics/) and the [assess](https://iter8.tools/0.11/user-guide/tasks/assess/) tasks. The `custommetrics` task uses your custom metrics file in order to query for metrics and the `assess` task will use those metrics to evaluate your service(s) by validating them against the specified SLOs.
 
 `custommetrics.templates.istio-prom=...` tells Iter8 where it can access the custom metrics file.
 
@@ -180,4 +173,8 @@ This is a summary of what happened during the experiment. As you can see, the er
 
 ### Next steps
 
-To learn more about Iter8 and how to run SLO validation and A/B(/n) experiments with your apps and ML models, take a look at our website [iter8.tools](https://iter8.tools). We have many [tutorials](https://iter8.tools/0.10/tutorials/load-test-http/basicusage/) as well as [documentation](https://iter8.tools/0.10/user-guide/topics/values/). If you need any help, you can find us on [Slack](https://join.slack.com/t/iter8-tools/shared_invite/zt-awl2se8i-L0pZCpuHntpPejxzLicbmw) and we'll happily answer any questions you have.
+To learn more about Iter8 and how to run performance tests on your apps and ML models, take a look at our website [iter8.tools](https://iter8.tools). We have many [tutorials](https://iter8.tools/0.10/tutorials/load-test-http/basicusage/) to try out. 
+
+To learn more about custom metrics, we have some more documentation [here](https://iter8.tools/0.11/user-guide/tasks/custommetrics/) and [here](https://iter8.tools/0.11/metrics/custom-metrics/). Again, defining your own custom metrics can help you use Iter8 to its fullest potential. 
+
+If you need any help, whether it be about setting up your own custom metrics or about Iter8 in general, you can find us on [Slack](https://join.slack.com/t/iter8-tools/shared_invite/zt-awl2se8i-L0pZCpuHntpPejxzLicbmw) and we'll happily answer any questions you have.
