@@ -3,7 +3,7 @@
 
 ![iter8](images/iter8.png)
 
-**SLO validation** and other forms of **performance testing** are key to ensuring your services **perform as intended** and **maximize business value**. With [Iter8](https://iter8.tools/0.10/), you can get started with SLO validation and A/B/(/n) testing in seconds. 
+**SLO validation** and other forms of **performance testing** are key to ensuring your services **perform as intended** and **maximize business value**. With [Iter8](https://iter8.tools/0.10/), you can get started with SLO validation and performance testing in seconds. 
 
 [Iter8](https://iter8.tools/0.10/) is an open source metrics-driven release optimizer for apps and ML-models deployed with Kubernetes. You can use Iter8 to conduct various kinds of **experiments** that do a **variety of tasks** such as collecting metrics from different versions of your service, validating those metrics against SLOs, determining which is the best performing version, and much more.
 
